@@ -5,29 +5,43 @@ type Props = {
   inlineImages: File[];
 };
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
 export default function Preview({ html, inlineImages }: Props) {
-  const [urls, setUrls] = useState<Record<string, string>>({});
+  const [dataUrls, setDataUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const created: Record<string, string> = {};
-    for (const f of inlineImages) {
-      created[f.name] = URL.createObjectURL(f);
-    }
-    setUrls(created);
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        inlineImages.map(async (f) => [f.name, await fileToDataUrl(f)] as const)
+      );
+      if (cancelled) return;
+      const next: Record<string, string> = {};
+      for (const [k, v] of entries) next[k] = v;
+      setDataUrls(next);
+    })();
     return () => {
-      for (const url of Object.values(created)) URL.revokeObjectURL(url);
+      cancelled = true;
     };
   }, [inlineImages]);
 
   const rendered = useMemo(() => {
     let out = html;
-    for (const [name, url] of Object.entries(urls)) {
+    for (const [name, url] of Object.entries(dataUrls)) {
       const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const re = new RegExp(`cid:${escaped}`, "g");
       out = out.replace(re, url);
     }
     return out;
-  }, [html, urls]);
+  }, [html, dataUrls]);
 
   const hasHtml = html.trim().length > 0;
 
@@ -40,7 +54,7 @@ export default function Preview({ html, inlineImages }: Props) {
       {hasHtml ? (
         <iframe
           title="preview"
-          sandbox=""
+          sandbox="allow-same-origin"
           srcDoc={rendered}
           className="preview-frame"
         />
