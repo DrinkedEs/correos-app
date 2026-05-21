@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 type Props = {
   label: string;
@@ -7,6 +7,7 @@ type Props = {
   accept?: string;
   onChange: (files: File[]) => void;
   renderItemHint?: (f: File) => string;
+  copyForClaude?: (files: File[]) => string;
 };
 
 export default function FileDrop({
@@ -15,9 +16,11 @@ export default function FileDrop({
   files,
   accept,
   onChange,
-  renderItemHint
+  renderItemHint,
+  copyForClaude
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [copied, setCopied] = useState(false);
 
   function add(list: FileList | null) {
     if (!list) return;
@@ -37,9 +40,27 @@ export default function FileDrop({
     onChange(files.filter((_, i) => i !== idx));
   }
 
+  async function copyHint() {
+    if (!copyForClaude) return;
+    try {
+      await navigator.clipboard.writeText(copyForClaude(files));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   return (
     <div className="card">
-      <h3>{label}</h3>
+      <div className="card-head">
+        <h3>{label}</h3>
+        {copyForClaude && files.length > 0 ? (
+          <button type="button" className="ghost small" onClick={copyHint}>
+            {copied ? "✓ Copiado" : "Copiar nombres pa Claude"}
+          </button>
+        ) : null}
+      </div>
       {hint ? <p className="hint">{hint}</p> : null}
 
       <div

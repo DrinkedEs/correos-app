@@ -6,10 +6,11 @@ import Preview from "./components/Preview";
 import EmailHelp from "./components/EmailHelp";
 import { sendEmail, type SmtpCreds, type SendResult } from "./api/sendEmail";
 import { clearCreds, loadCreds, saveCreds } from "./state/session";
+import { addContactsFromCsv } from "./state/contacts";
 
 const EMPTY_CREDS: SmtpCreds = {
   smtpHost: "",
-  smtpPort: 587,
+  smtpPort: 465,
   smtpUser: "",
   smtpPass: "",
   fromName: ""
@@ -29,6 +30,17 @@ type Status =
   | { kind: "ok"; result: SendResult }
   | { kind: "err"; message: string };
 
+function buildCidContext(files: File[]): string {
+  if (files.length === 0) return "";
+  const lines = files
+    .map(
+      (f) =>
+        `- ${f.name} → usar <img src="cid:${f.name}" alt="..." style="display:block;border:0;" />`
+    )
+    .join("\n");
+  return `Imágenes inline disponibles (referencia con cid:NOMBRE):\n${lines}`;
+}
+
 export default function App() {
   const [creds, setCreds] = useState<SmtpCreds>(EMPTY_CREDS);
   const [remember, setRemember] = useState(false);
@@ -36,7 +48,6 @@ export default function App() {
   const [inlineImages, setInlineImages] = useState<File[]>([]);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
-  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     const loaded = loadCreds();
@@ -89,6 +100,7 @@ export default function App() {
         inlineImages,
         attachments
       });
+      addContactsFromCsv(msg.to, msg.cc, msg.bcc);
       setStatus({ kind: "ok", result });
     } catch (e: any) {
       setStatus({ kind: "err", message: e?.message ?? "Error desconocido" });
@@ -102,77 +114,74 @@ export default function App() {
         <div className="sub">Envío de HTML vía tu propio servidor</div>
       </header>
 
-      <main>
-        <SmtpConfig
-          creds={creds}
-          remember={remember}
-          onChange={setCreds}
-          onRememberChange={handleRememberChange}
-          onClear={handleClear}
-        />
+      <div className="layout">
+        <div className="col-left">
+          <SmtpConfig
+            creds={creds}
+            remember={remember}
+            onChange={setCreds}
+            onRememberChange={handleRememberChange}
+            onClear={handleClear}
+          />
 
-        <EmailHelp
-          onUseTemplate={(html) => setMsg((m) => ({ ...m, html }))}
-        />
+          <EmailHelp
+            onUseTemplate={(html) => setMsg((m) => ({ ...m, html }))}
+          />
 
-        <Compose value={msg} onChange={setMsg} />
+          <Compose value={msg} onChange={setMsg} />
 
-        <FileDrop
-          label="Imágenes inline"
-          hint='Súbelas, después referencia con <img src="cid:NOMBRE_ARCHIVO" /> en el HTML.'
-          files={inlineImages}
-          accept="image/*"
-          onChange={setInlineImages}
-          renderItemHint={(f) => `cid:${f.name}`}
-        />
+          <FileDrop
+            label="Imágenes inline"
+            hint='Súbelas y referencia con <img src="cid:NOMBRE" /> en el HTML. Usa "Copiar nombres pa Claude" para pegar contexto.'
+            files={inlineImages}
+            accept="image/*"
+            onChange={setInlineImages}
+            renderItemHint={(f) => `cid:${f.name}`}
+            copyForClaude={buildCidContext}
+          />
 
-        <FileDrop
-          label="Adjuntos"
-          hint="Excel, PDF, etc."
-          files={attachments}
-          onChange={setAttachments}
-        />
+          <FileDrop
+            label="Adjuntos"
+            hint="Excel, PDF, etc. — no se referencian en el HTML."
+            files={attachments}
+            onChange={setAttachments}
+          />
 
-        <div className="actions">
-          <button
-            type="button"
-            className="ghost"
-            onClick={() => setShowPreview((v) => !v)}
-          >
-            {showPreview ? "Ocultar preview" : "Mostrar preview"}
-          </button>
-          <button
-            type="button"
-            className="primary"
-            disabled={status.kind === "sending"}
-            onClick={handleSend}
-          >
-            {status.kind === "sending" ? "Enviando..." : "Enviar correo"}
-          </button>
+          <div className="actions">
+            <button
+              type="button"
+              className="primary"
+              disabled={status.kind === "sending"}
+              onClick={handleSend}
+            >
+              {status.kind === "sending" ? "Enviando..." : "Enviar correo"}
+            </button>
+          </div>
+
+          {status.kind === "ok" ? (
+            <div className="card status ok">
+              <b>Enviado.</b>
+              <div>messageId: {status.result.messageId}</div>
+              <div>Aceptados: {status.result.accepted.join(", ") || "—"}</div>
+              <div>Rechazados: {status.result.rejected.join(", ") || "—"}</div>
+            </div>
+          ) : null}
+
+          {status.kind === "err" ? (
+            <div className="card status err">
+              <b>Error:</b> {status.message}
+            </div>
+          ) : null}
         </div>
 
-        {showPreview ? (
+        <aside className="col-right">
           <Preview html={msg.html} inlineImages={inlineImages} />
-        ) : null}
-
-        {status.kind === "ok" ? (
-          <div className="card status ok">
-            <b>Enviado.</b>
-            <div>messageId: {status.result.messageId}</div>
-            <div>Aceptados: {status.result.accepted.join(", ") || "—"}</div>
-            <div>Rechazados: {status.result.rejected.join(", ") || "—"}</div>
-          </div>
-        ) : null}
-
-        {status.kind === "err" ? (
-          <div className="card status err">
-            <b>Error:</b> {status.message}
-          </div>
-        ) : null}
-      </main>
+        </aside>
+      </div>
 
       <footer className="app-footer">
-        Tus credenciales viajan por HTTPS y no se persisten en el servidor.
+        Credenciales SMTP por HTTPS, no se persisten en el servidor. Contactos
+        se guardan localmente en este browser.
       </footer>
     </div>
   );

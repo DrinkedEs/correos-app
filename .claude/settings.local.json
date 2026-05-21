@@ -10,7 +10,11 @@
       "PowerShell(ls \"C:\\\\Users\\\\Alexis Valdez\\\\Documents\\\\PageMoldWSCKT\\\\serverGordis\\\\src\\\\middleware\\\\\")",
       "PowerShell(ls \"C:\\\\Users\\\\Alexis Valdez\\\\Documents\\\\PageMoldWSCKT\\\\serverGordis\\\\src\\\\sap\\\\\")",
       "PowerShell(gh --version)",
-      "PowerShell(gh auth status)"
+      "PowerShell(gh auth status)",
+      "Bash(gh run *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
     ]
   }
 }

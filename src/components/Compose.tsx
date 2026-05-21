@@ -1,3 +1,5 @@
+import RecipientsField from "./RecipientsField";
+
 type Composed = {
   to: string;
   cc: string;
@@ -21,34 +23,27 @@ export default function Compose({ value, onChange }: Props) {
       <h2>Mensaje</h2>
 
       <div className="row">
-        <label>
-          Para (CSV)
-          <input
-            type="text"
-            placeholder="a@x.com, b@y.com"
-            value={value.to}
-            onChange={(e) => set("to", e.target.value)}
-          />
-        </label>
+        <RecipientsField
+          label="Para"
+          placeholder="Escribe un correo y Enter, o coma..."
+          value={value.to}
+          onChange={(v) => set("to", v)}
+        />
       </div>
 
       <div className="row two">
-        <label>
-          CC (opcional)
-          <input
-            type="text"
-            value={value.cc}
-            onChange={(e) => set("cc", e.target.value)}
-          />
-        </label>
-        <label>
-          BCC (opcional)
-          <input
-            type="text"
-            value={value.bcc}
-            onChange={(e) => set("bcc", e.target.value)}
-          />
-        </label>
+        <RecipientsField
+          label="CC"
+          placeholder="opcional"
+          value={value.cc}
+          onChange={(v) => set("cc", v)}
+        />
+        <RecipientsField
+          label="CCO"
+          placeholder="opcional"
+          value={value.bcc}
+          onChange={(v) => set("bcc", v)}
+        />
       </div>
 
       <div className="row">
@@ -66,7 +61,7 @@ export default function Compose({ value, onChange }: Props) {
         <label>
           HTML
           <textarea
-            rows={16}
+            rows={18}
             value={value.html}
             onChange={(e) => set("html", e.target.value)}
             spellCheck={false}
