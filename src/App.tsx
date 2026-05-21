@@ -2,9 +2,15 @@ import { useEffect, useState } from "react";
 import SmtpConfig from "./components/SmtpConfig";
 import Compose from "./components/Compose";
 import FileDrop from "./components/FileDrop";
+import InlineImagesCard from "./components/InlineImagesCard";
 import Preview from "./components/Preview";
 import EmailHelp from "./components/EmailHelp";
-import { sendEmail, type SmtpCreds, type SendResult } from "./api/sendEmail";
+import {
+  sendEmail,
+  type InlineImage,
+  type SmtpCreds,
+  type SendResult
+} from "./api/sendEmail";
 import {
   clearPass,
   clearProfile,
@@ -37,22 +43,11 @@ type Status =
   | { kind: "ok"; result: SendResult }
   | { kind: "err"; message: string };
 
-function buildCidContext(files: File[]): string {
-  if (files.length === 0) return "";
-  const lines = files
-    .map(
-      (f) =>
-        `- ${f.name} → usar <img src="cid:${f.name}" alt="..." style="display:block;border:0;" />`
-    )
-    .join("\n");
-  return `Imágenes inline disponibles (referencia con cid:NOMBRE):\n${lines}`;
-}
-
 export default function App() {
   const [creds, setCreds] = useState<SmtpCreds>(EMPTY_CREDS);
   const [rememberPass, setRememberPass] = useState(false);
   const [msg, setMsg] = useState(EMPTY_MSG);
-  const [inlineImages, setInlineImages] = useState<File[]>([]);
+  const [inlineImages, setInlineImages] = useState<InlineImage[]>([]);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
@@ -153,14 +148,9 @@ export default function App() {
 
           <Compose value={msg} onChange={setMsg} />
 
-          <FileDrop
-            label="Imágenes inline"
-            hint='Súbelas y referencia con <img src="cid:NOMBRE" /> en el HTML. Usa "Copiar nombres pa Claude" para pegar contexto.'
-            files={inlineImages}
-            accept="image/*"
+          <InlineImagesCard
+            images={inlineImages}
             onChange={setInlineImages}
-            renderItemHint={(f) => `cid:${f.name}`}
-            copyForClaude={buildCidContext}
           />
 
           <FileDrop

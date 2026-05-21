@@ -8,13 +8,18 @@ export type SmtpCreds = {
   fromName?: string;
 };
 
+export type InlineImage = {
+  file: File;
+  cid: string;
+};
+
 export type EmailPayload = {
   to: string;
   cc?: string;
   bcc?: string;
   subject: string;
   html: string;
-  inlineImages?: File[];
+  inlineImages?: InlineImage[];
   attachments?: File[];
 };
 
@@ -42,7 +47,15 @@ export async function sendEmail(
   fd.append("subject", payload.subject);
   fd.append("html", payload.html);
 
-  (payload.inlineImages ?? []).forEach((f) => fd.append("inline", f, f.name));
+  const cidMap: Record<string, string> = {};
+  (payload.inlineImages ?? []).forEach((img) => {
+    fd.append("inline", img.file, img.file.name);
+    cidMap[img.file.name] = img.cid;
+  });
+  if (Object.keys(cidMap).length > 0) {
+    fd.append("inlineCids", JSON.stringify(cidMap));
+  }
+
   (payload.attachments ?? []).forEach((f) => fd.append("attachments", f, f.name));
 
   const res = await fetch(SEND_EMAIL_URL, { method: "POST", body: fd });

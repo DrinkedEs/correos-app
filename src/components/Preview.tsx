@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import type { InlineImage } from "../api/sendEmail";
 
 type Props = {
   html: string;
-  inlineImages: File[];
+  inlineImages: InlineImage[];
 };
 
 function fileToDataUrl(file: File): Promise<string> {
@@ -14,14 +15,12 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-function replaceCidsInHtml(html: string, urls: Record<string, string>): string {
+function replaceCidsInHtml(
+  html: string,
+  cidToUrl: Map<string, string>
+): string {
   if (!html) return html;
-  if (Object.keys(urls).length === 0) return html;
-
-  const lookup = new Map<string, string>();
-  for (const [k, v] of Object.entries(urls)) {
-    lookup.set(k.toLowerCase(), v);
-  }
+  if (cidToUrl.size === 0) return html;
 
   let doc: Document;
   try {
@@ -37,33 +36,30 @@ function replaceCidsInHtml(html: string, urls: Record<string, string>): string {
     const m = src.match(/^\s*cid:(.+?)\s*$/i);
     if (!m) return;
     const cid = m[1].trim().toLowerCase();
-    const url = lookup.get(cid);
+    const url = cidToUrl.get(cid);
     if (url) {
       img.setAttribute("src", url);
       touched = true;
     }
   });
 
-  if (!touched) {
-    return html;
-  }
-
+  if (!touched) return html;
   return "<!DOCTYPE html>" + doc.documentElement.outerHTML;
 }
 
 export default function Preview({ html, inlineImages }: Props) {
-  const [dataUrls, setDataUrls] = useState<Record<string, string>>({});
+  const [byCid, setByCid] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const entries = await Promise.all(
-        inlineImages.map(async (f) => [f.name, await fileToDataUrl(f)] as const)
+        inlineImages.map(
+          async (img) => [img.cid.toLowerCase(), await fileToDataUrl(img.file)] as const
+        )
       );
       if (cancelled) return;
-      const next: Record<string, string> = {};
-      for (const [k, v] of entries) next[k] = v;
-      setDataUrls(next);
+      setByCid(new Map(entries));
     })();
     return () => {
       cancelled = true;
@@ -71,8 +67,8 @@ export default function Preview({ html, inlineImages }: Props) {
   }, [inlineImages]);
 
   const rendered = useMemo(
-    () => replaceCidsInHtml(html, dataUrls),
-    [html, dataUrls]
+    () => replaceCidsInHtml(html, byCid),
+    [html, byCid]
   );
 
   const hasHtml = html.trim().length > 0;
