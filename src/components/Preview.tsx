@@ -14,6 +14,43 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
+function replaceCidsInHtml(html: string, urls: Record<string, string>): string {
+  if (!html) return html;
+  if (Object.keys(urls).length === 0) return html;
+
+  const lookup = new Map<string, string>();
+  for (const [k, v] of Object.entries(urls)) {
+    lookup.set(k.toLowerCase(), v);
+  }
+
+  let doc: Document;
+  try {
+    doc = new DOMParser().parseFromString(html, "text/html");
+  } catch {
+    return html;
+  }
+
+  const imgs = doc.querySelectorAll("img");
+  let touched = false;
+  imgs.forEach((img) => {
+    const src = img.getAttribute("src") ?? "";
+    const m = src.match(/^\s*cid:(.+?)\s*$/i);
+    if (!m) return;
+    const cid = m[1].trim().toLowerCase();
+    const url = lookup.get(cid);
+    if (url) {
+      img.setAttribute("src", url);
+      touched = true;
+    }
+  });
+
+  if (!touched) {
+    return html;
+  }
+
+  return "<!DOCTYPE html>" + doc.documentElement.outerHTML;
+}
+
 export default function Preview({ html, inlineImages }: Props) {
   const [dataUrls, setDataUrls] = useState<Record<string, string>>({});
 
@@ -33,15 +70,10 @@ export default function Preview({ html, inlineImages }: Props) {
     };
   }, [inlineImages]);
 
-  const rendered = useMemo(() => {
-    let out = html;
-    for (const [name, url] of Object.entries(dataUrls)) {
-      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const re = new RegExp(`cid:${escaped}`, "g");
-      out = out.replace(re, url);
-    }
-    return out;
-  }, [html, dataUrls]);
+  const rendered = useMemo(
+    () => replaceCidsInHtml(html, dataUrls),
+    [html, dataUrls]
+  );
 
   const hasHtml = html.trim().length > 0;
 

@@ -41,7 +41,8 @@ export default function SmtpConfig({
       <h2>Credenciales SMTP</h2>
       <p className="hint">
         Pa Gmail/Outlook usa un <b>App Password</b>, no tu password normal.
-        Nada se persiste en servidor; opcional guardar en sesión del browser.
+        Host/correo se guardan en este browser. Password sólo en memoria
+        salvo que actives la opción de abajo.
       </p>
 
       <div className="row">
@@ -134,7 +135,7 @@ export default function SmtpConfig({
             checked={remember}
             onChange={(e) => onRememberChange(e.target.checked)}
           />
-          Recordar en esta sesión (sessionStorage, se borra al cerrar browser)
+          Recordar password en esta sesión (se borra al cerrar browser)
         </label>
         <button type="button" className="ghost" onClick={onClear}>
           Limpiar credenciales

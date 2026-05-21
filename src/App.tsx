@@ -5,7 +5,14 @@ import FileDrop from "./components/FileDrop";
 import Preview from "./components/Preview";
 import EmailHelp from "./components/EmailHelp";
 import { sendEmail, type SmtpCreds, type SendResult } from "./api/sendEmail";
-import { clearCreds, loadCreds, saveCreds } from "./state/session";
+import {
+  clearPass,
+  clearProfile,
+  loadPass,
+  loadProfile,
+  saveProfile,
+  savePass
+} from "./state/session";
 import { addContactsFromCsv } from "./state/contacts";
 
 const EMPTY_CREDS: SmtpCreds = {
@@ -43,33 +50,49 @@ function buildCidContext(files: File[]): string {
 
 export default function App() {
   const [creds, setCreds] = useState<SmtpCreds>(EMPTY_CREDS);
-  const [remember, setRemember] = useState(false);
+  const [rememberPass, setRememberPass] = useState(false);
   const [msg, setMsg] = useState(EMPTY_MSG);
   const [inlineImages, setInlineImages] = useState<File[]>([]);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
   useEffect(() => {
-    const loaded = loadCreds();
-    if (loaded) {
-      setCreds(loaded);
-      setRemember(true);
+    const profile = loadProfile();
+    const pass = loadPass();
+    if (profile || pass) {
+      setCreds((prev) => ({
+        ...prev,
+        ...(profile ?? {}),
+        smtpPass: pass ?? prev.smtpPass
+      }));
+      if (pass) setRememberPass(true);
     }
   }, []);
 
   useEffect(() => {
-    if (remember) saveCreds(creds);
-  }, [remember, creds]);
+    const { smtpPass, ...profile } = creds;
+    void smtpPass;
+    saveProfile(profile);
+  }, [creds]);
 
-  function handleRememberChange(v: boolean) {
-    setRemember(v);
-    if (!v) clearCreds();
+  useEffect(() => {
+    if (rememberPass) {
+      if (creds.smtpPass) savePass(creds.smtpPass);
+    } else {
+      clearPass();
+    }
+  }, [rememberPass, creds.smtpPass]);
+
+  function handleRememberPass(v: boolean) {
+    setRememberPass(v);
+    if (!v) clearPass();
   }
 
   function handleClear() {
     setCreds(EMPTY_CREDS);
-    clearCreds();
-    setRemember(false);
+    clearProfile();
+    clearPass();
+    setRememberPass(false);
   }
 
   function validate(): string | null {
@@ -118,9 +141,9 @@ export default function App() {
         <div className="col-left">
           <SmtpConfig
             creds={creds}
-            remember={remember}
+            remember={rememberPass}
             onChange={setCreds}
-            onRememberChange={handleRememberChange}
+            onRememberChange={handleRememberPass}
             onClear={handleClear}
           />
 
@@ -180,8 +203,8 @@ export default function App() {
       </div>
 
       <footer className="app-footer">
-        Credenciales SMTP por HTTPS, no se persisten en el servidor. Contactos
-        se guardan localmente en este browser.
+        Host/correo se guardan localmente en este browser. Password solo en
+        memoria (o sesión opt-in). Nada se persiste en el servidor.
       </footer>
     </div>
   );
