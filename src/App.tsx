@@ -3,6 +3,7 @@ import SmtpConfig from "./components/SmtpConfig";
 import Compose from "./components/Compose";
 import FileDrop from "./components/FileDrop";
 import Preview from "./components/Preview";
+import EmailHelp from "./components/EmailHelp";
 import { sendEmail, type SmtpCreds, type SendResult } from "./api/sendEmail";
 import { clearCreds, loadCreds, saveCreds } from "./state/session";
 
@@ -108,6 +109,10 @@ export default function App() {
           onChange={setCreds}
           onRememberChange={handleRememberChange}
           onClear={handleClear}
+        />
+
+        <EmailHelp
+          onUseTemplate={(html) => setMsg((m) => ({ ...m, html }))}
         />
 
         <Compose value={msg} onChange={setMsg} />

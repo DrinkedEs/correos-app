@@ -13,7 +13,7 @@ const PRESETS: Array<{ label: string; host: string; port: number }> = [
   { label: "Custom", host: "", port: 587 },
   { label: "Gmail (app password)", host: "smtp.gmail.com", port: 587 },
   { label: "Outlook / Office 365", host: "smtp.office365.com", port: 587 },
-  { label: "Exmail QQ", host: "smtp.exmail.qq.com", port: 587 },
+  { label: "Exmail QQ", host: "smtp.exmail.qq.com", port: 465 },
   { label: "Zoho", host: "smtp.zoho.com", port: 587 }
 ];
 
