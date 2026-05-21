@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Alexis Valdez\\\\Documents\\\\PageMoldWSCKT\\\\serverGordis\" -Force)",
+      "Bash(Select-Object Name, FullName)",
+      "PowerShell(ls \"C:\\\\Users\\\\Alexis Valdez\\\\Documents\\\\PageMoldWSCKT\\\\serverGordis\\\\\" -Exclude node_modules)",
+      "PowerShell(ls \"C:\\\\Users\\\\Alexis Valdez\\\\Documents\\\\PageMoldWSCKT\\\\serverGordis\\\\src\\\\\" -Recurse)",
+      "PowerShell(ls \"C:\\\\Users\\\\Alexis Valdez\\\\Documents\\\\PageMoldWSCKT\\\\serverGordis\\\\src\\\\\")",
+      "PowerShell(ls \"C:\\\\Users\\\\Alexis Valdez\\\\Documents\\\\PageMoldWSCKT\\\\serverGordis\\\\src\\\\routes\\\\\")",
+      "PowerShell(ls \"C:\\\\Users\\\\Alexis Valdez\\\\Documents\\\\PageMoldWSCKT\\\\serverGordis\\\\src\\\\middleware\\\\\")",
+      "PowerShell(ls \"C:\\\\Users\\\\Alexis Valdez\\\\Documents\\\\PageMoldWSCKT\\\\serverGordis\\\\src\\\\sap\\\\\")",
+      "PowerShell(gh --version)",
+      "PowerShell(gh auth status)"
+    ]
+  }
+}
