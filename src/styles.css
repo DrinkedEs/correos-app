@@ -163,6 +163,7 @@ body {
 .preview-tools { display: flex; align-items: center; gap: 8px; }
 .preview-card:fullscreen { width: 100vw; height: 100vh; max-width: none; border-radius: 0; padding: 20px; overflow: hidden; background: var(--bg); }
 .preview-card:fullscreen .preview-frame { height: calc(100vh - 120px); max-height: none; }
+.preview-edit-hint { color: var(--brand-dark); }
 .signature-actions { justify-content: flex-start; margin: -4px 0; }
 
 /* CARD */
@@ -792,6 +793,7 @@ button.small {
   .mail-row { grid-template-columns: 1fr; gap: 3px; }
   .inbox-list { margin-left: -16px; margin-right: -16px; }
 }
+button.ghost.active { border-color: var(--brand); background: var(--brand-50); color: var(--brand-dark); }
 
 @media (max-width: 1100px) {
   .mail-workspace { grid-template-columns: 1fr; }

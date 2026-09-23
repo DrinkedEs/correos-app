@@ -228,7 +228,7 @@ export default function App() {
           ) : null}
             </div>
           </div>
-          <Preview html={previewHtml} inlineImages={inlineImages} />
+          <Preview html={previewHtml} inlineImages={inlineImages} onEditHtml={(html) => setMsg((message) => ({ ...message, html }))} />
         </main>
       </div>
 
@@ -245,5 +245,5 @@ function composeReplyHtml(responseHtml: string, originalHtml: string): string {
     const doc = new DOMParser().parseFromString(html, "text/html");
     return doc.body.innerHTML || html;
   };
-  return `<!doctype html><html><body><section style="font-family:Arial,sans-serif"><h3 style="color:#156082">Respuesta</h3>${body(responseHtml)}</section><hr style="border:0;border-top:1px solid #d7dee7;margin:28px 0"><section><p style="font:12px Arial,sans-serif;color:#64748b;margin:0 0 12px">Correo anterior</p>${body(originalHtml)}</section></body></html>`;
+  return `<!doctype html><html><body><section id="correo-respuesta" style="font-family:Arial,sans-serif"><h3 style="color:#156082">Respuesta</h3>${body(responseHtml)}</section><hr style="border:0;border-top:1px solid #d7dee7;margin:28px 0"><section contenteditable="false"><p style="font:12px Arial,sans-serif;color:#64748b;margin:0 0 12px">Correo anterior</p>${body(originalHtml)}</section></body></html>`;
 }
