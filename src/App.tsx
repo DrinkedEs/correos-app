@@ -21,7 +21,7 @@ import {
 } from "./state/session";
 import { addContactsFromCsv } from "./state/contacts";
 import GroupsCard from "./components/GroupsCard";
-import Inbox, { type MailCredentials } from "./components/Inbox";
+import Inbox, { type MailCredentials, type OpenMessage } from "./components/Inbox";
 import { builtInImages, signatureHtml } from "./state/builtInAssets";
 
 const EMPTY_CREDS: SmtpCreds = {
@@ -139,8 +139,12 @@ export default function App() {
     } catch { setStatus({ kind: "err", message: "No se pudieron cargar los recursos de firma." }); }
   }
 
-  function replyTo(mail: { from: { address: string }; subject: string; html: string; messageId: string }) {
-    setMsg({ to: mail.from.address, cc: "", bcc: "", subject: /^re:/i.test(mail.subject) ? mail.subject : `Re: ${mail.subject}`, html: `<p><br></p><hr><blockquote>${mail.html}</blockquote>` });
+  function replyTo(mail: OpenMessage, all = false) {
+    const own = creds.smtpUser.trim().toLowerCase();
+    const unique = (list: { address: string }[]) => Array.from(new Set(list.map((x) => x.address.trim().toLowerCase()).filter((address) => address && address !== own)));
+    const to = all ? unique([mail.from, ...mail.to]) : unique([mail.from]);
+    const cc = all ? unique(mail.cc).filter((address) => !to.includes(address)) : [];
+    setMsg({ to: to.join(", "), cc: cc.join(", "), bcc: "", subject: /^re:/i.test(mail.subject) ? mail.subject : `Re: ${mail.subject}`, html: `<p><br></p><hr><blockquote>${mail.html}</blockquote>` });
     setReply({ inReplyTo: mail.messageId, references: mail.messageId });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -173,7 +177,7 @@ export default function App() {
 
           <GroupsCard onPick={(emails) => setMsg((m) => ({ ...m, to: Array.from(new Set([...m.to.split(/[,;]+/).map(x => x.trim()).filter(Boolean), ...emails])).join(", ") }))} />
 
-          <Inbox creds={mailboxCreds} onReply={replyTo} />
+          <Inbox creds={mailboxCreds} onReply={replyTo} onReplyAll={(mail) => replyTo(mail, true)} />
 
           <InlineImagesCard
             images={inlineImages}

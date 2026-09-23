@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { InlineImage } from "../api/sendEmail";
 
 type Props = {
@@ -49,6 +49,19 @@ function replaceCidsInHtml(
 
 export default function Preview({ html, inlineImages }: Props) {
   const [byCid, setByCid] = useState<Map<string, string>>(new Map());
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [full, setFull] = useState(false);
+
+  async function toggleFull() {
+    if (!document.fullscreenElement) await cardRef.current?.requestFullscreen();
+    else await document.exitFullscreen();
+  }
+
+  useEffect(() => {
+    const change = () => setFull(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", change);
+    return () => document.removeEventListener("fullscreenchange", change);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,10 +87,10 @@ export default function Preview({ html, inlineImages }: Props) {
   const hasHtml = html.trim().length > 0;
 
   return (
-    <div className="card preview-card">
+    <div ref={cardRef} className={`card preview-card ${full ? "preview-fullscreen" : ""}`}>
       <div className="card-head">
         <h3>Preview</h3>
-        <span className="preview-badge">render del navegador</span>
+        <div className="preview-tools"><span className="preview-badge">render del navegador</span><button type="button" className="ghost small" onClick={toggleFull}>{full ? "Salir completa" : "Ver completa"}</button></div>
       </div>
       {hasHtml ? (
         <iframe
