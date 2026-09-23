@@ -139,7 +139,7 @@ export default function App() {
     try {
       const images = await builtInImages();
       setInlineImages((old) => [...old.filter((x) => !images.some((i) => i.cid === x.cid)), ...images]);
-      setMsg((m) => ({ ...m, html: m.html.includes("cid:firma@correos.local") ? m.html : `${m.html}${signatureHtml}` }));
+      setMsg((m) => ({ ...m, html: m.html.includes("cid:firma_id") ? m.html : `${m.html}${signatureHtml}` }));
     } catch { setStatus({ kind: "err", message: "No se pudieron cargar los recursos de firma." }); }
   }
 

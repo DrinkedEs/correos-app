@@ -1,8 +1,8 @@
 import type { InlineImage } from "../api/sendEmail";
 const ASSETS = [
-  ["firma.jpg", "firma@correos.local"],
-  ["logo.png", "logo@correos.local"],
-  ["logoForesight_chico.ico", "foresight@correos.local"]
+  ["firma.jpg", "firma_id"],
+  ["logo.png", "logo_id"],
+  ["logoForesight_chico.ico", "logoForesight_chico_id"]
 ] as const;
 export async function builtInImages(): Promise<InlineImage[]> {
   return Promise.all(ASSETS.map(async ([name, cid]) => {
@@ -10,4 +10,4 @@ export async function builtInImages(): Promise<InlineImage[]> {
     return { file: new File([blob], name, { type: blob.type || "application/octet-stream" }), cid };
   }));
 }
-export const signatureHtml = `<br><br><img src="cid:firma@correos.local" alt="Firma"><br><img src="cid:logo@correos.local" alt="Logo">`;
+export const signatureHtml = `<br><br><img src="cid:firma_id" alt="Firma"><br><img src="cid:logo_id" alt="Logo">`;
