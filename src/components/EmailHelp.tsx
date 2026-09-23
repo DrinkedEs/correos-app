@@ -53,7 +53,7 @@ const BASE_TEMPLATE = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eef2f7">
     <tr>
       <td align="center" style="padding:32px 12px;">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:1200px;background:#ffffff;border-radius:12px;overflow:hidden;">
           <tr>
             <td align="center" bgcolor="#0d4668" style="padding:28px 24px;color:#ffffff;font-size:24px;font-weight:bold;letter-spacing:0.5px;">
               ENCABEZADO
