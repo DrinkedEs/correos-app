@@ -53,7 +53,7 @@ export default function App() {
   const [inlineImages, setInlineImages] = useState<InlineImage[]>([]);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
-  const [reply, setReply] = useState<{ inReplyTo: string; references: string } | null>(null);
+  const [reply, setReply] = useState<{ inReplyTo: string; references: string; originalHtml: string; originalSubject: string } | null>(null);
 
   useEffect(() => {
     const profile = loadProfile();
@@ -113,12 +113,13 @@ export default function App() {
     }
     setStatus({ kind: "sending" });
     try {
+      const finalHtml = reply ? composeReplyHtml(msg.html, reply.originalHtml) : msg.html;
       const result = await sendEmail(creds, {
         to: msg.to,
         cc: msg.cc || undefined,
         bcc: msg.bcc || undefined,
         subject: msg.subject,
-        html: msg.html,
+        html: finalHtml,
         inlineImages,
         attachments,
         inReplyTo: reply?.inReplyTo,
@@ -130,6 +131,8 @@ export default function App() {
       setStatus({ kind: "err", message: e?.message ?? "Error desconocido" });
     }
   }
+
+  const previewHtml = reply ? composeReplyHtml(msg.html, reply.originalHtml) : msg.html;
 
   async function insertSignature() {
     try {
@@ -144,8 +147,8 @@ export default function App() {
     const unique = (list: { address: string }[]) => Array.from(new Set(list.map((x) => x.address.trim().toLowerCase()).filter((address) => address && address !== own)));
     const to = all ? unique([mail.from, ...mail.to]) : unique([mail.from]);
     const cc = all ? unique(mail.cc).filter((address) => !to.includes(address)) : [];
-    setMsg({ to: to.join(", "), cc: cc.join(", "), bcc: "", subject: /^re:/i.test(mail.subject) ? mail.subject : `Re: ${mail.subject}`, html: `<p><br></p><hr><blockquote>${mail.html}</blockquote>` });
-    setReply({ inReplyTo: mail.messageId, references: mail.messageId });
+    setMsg({ to: to.join(", "), cc: cc.join(", "), bcc: "", subject: /^re:/i.test(mail.subject) ? mail.subject : `Re: ${mail.subject}`, html: "<p><br></p>" });
+    setReply({ inReplyTo: mail.messageId, references: mail.messageId, originalHtml: mail.html, originalSubject: mail.subject });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   const mailboxCreds: MailCredentials = { imapUser: creds.smtpUser, imapPass: creds.smtpPass, imapHost: "imap.exmail.qq.com", imapPort: 993 };
@@ -157,8 +160,13 @@ export default function App() {
         <div className="sub">Envío de HTML vía tu propio servidor</div>
       </header>
 
-      <div className="layout">
-        <div className="col-left">
+      <div className="mail-workspace">
+        <aside className="mail-sidebar">
+          <Inbox creds={mailboxCreds} onReply={replyTo} onReplyAll={(mail) => replyTo(mail, true)} />
+        </aside>
+        <main className="mail-main">
+          <div className="composer-controls">
+            <div className="composer-settings">
           <SmtpConfig
             creds={creds}
             remember={rememberPass}
@@ -166,18 +174,17 @@ export default function App() {
             onRememberChange={handleRememberPass}
             onClear={handleClear}
           />
-
+          <GroupsCard onPick={(emails) => setMsg((m) => ({ ...m, to: Array.from(new Set([...m.to.split(/[,;]+/).map(x => x.trim()).filter(Boolean), ...emails])).join(", ") }))} />
+            </div>
+            <div className="composer-message">
           <EmailHelp
             onUseTemplate={(html) => setMsg((m) => ({ ...m, html }))}
           />
 
-          <Compose value={msg} onChange={setMsg} />
+          {reply ? <div className="reply-banner"><b>Respuesta</b><span>Tu contenido se enviará arriba de: {reply.originalSubject}</span><button type="button" className="ghost small" onClick={() => setReply(null)}>Quitar respuesta</button></div> : null}
+          <Compose value={msg} onChange={setMsg} htmlLabel={reply ? "HTML de la respuesta" : "HTML del correo"} />
 
           <div className="actions signature-actions"><button type="button" className="ghost" onClick={insertSignature}>Insertar firma y logos</button>{reply ? <button type="button" className="ghost small" onClick={() => setReply(null)}>Quitar respuesta</button> : null}</div>
-
-          <GroupsCard onPick={(emails) => setMsg((m) => ({ ...m, to: Array.from(new Set([...m.to.split(/[,;]+/).map(x => x.trim()).filter(Boolean), ...emails])).join(", ") }))} />
-
-          <Inbox creds={mailboxCreds} onReply={replyTo} onReplyAll={(mail) => replyTo(mail, true)} />
 
           <InlineImagesCard
             images={inlineImages}
@@ -216,11 +223,10 @@ export default function App() {
               <b>Error:</b> {status.message}
             </div>
           ) : null}
-        </div>
-
-        <aside className="col-right">
-          <Preview html={msg.html} inlineImages={inlineImages} />
-        </aside>
+            </div>
+          </div>
+          <Preview html={previewHtml} inlineImages={inlineImages} />
+        </main>
       </div>
 
       <footer className="app-footer">
@@ -229,4 +235,12 @@ export default function App() {
       </footer>
     </div>
   );
+}
+
+function composeReplyHtml(responseHtml: string, originalHtml: string): string {
+  const body = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.body.innerHTML || html;
+  };
+  return `<!doctype html><html><body><section style="font-family:Arial,sans-serif"><h3 style="color:#156082">Respuesta</h3>${body(responseHtml)}</section><hr style="border:0;border-top:1px solid #d7dee7;margin:28px 0"><section><p style="font:12px Arial,sans-serif;color:#64748b;margin:0 0 12px">Correo anterior</p>${body(originalHtml)}</section></body></html>`;
 }

@@ -130,6 +130,17 @@ body {
   }
 }
 
+/* OUTLOOK-STYLE WORKSPACE */
+.mail-workspace { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.mail-sidebar { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; }
+.mail-main { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.composer-controls { display: grid; grid-template-columns: minmax(300px, .42fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.composer-settings, .composer-message { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.mail-main > .preview-card { width: 100%; }
+.mail-main .preview-frame { height: min(76vh, 980px); min-height: 650px; }
+.reply-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 11px 13px; background: var(--brand-50); border: 1px solid var(--brand-100); border-radius: var(--radius-sm); color: var(--brand-dark); }
+.reply-banner span { flex: 1; font-size: 13px; color: var(--text-soft); }
+
 /* INBOX AND GROUPS */
 .group-create { display: grid; grid-template-columns: 0.8fr 1.6fr auto; gap: 8px; margin-top: 12px; }
 .group-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -137,6 +148,8 @@ body {
 .group-pick { border: 0; background: var(--brand-50); color: var(--brand-dark); padding: 7px 10px; text-align: left; }
 .group-pick small { display: block; color: var(--text-soft); font-weight: 400; }
 .inbox-card { overflow: hidden; }
+.mail-sidebar .inbox-card { max-height: calc(100vh - 32px); overflow-y: auto; }
+.mail-sidebar .inbox-list { max-height: calc(100vh - 185px); }
 .inbox-status { color: var(--text-soft); font-size: 13px; }
 .inbox-list { max-height: 420px; overflow: auto; margin: 12px -20px 0; border-top: 1px solid var(--border); }
 .mail-row { width: 100%; display: grid; grid-template-columns: minmax(120px,.8fr) minmax(160px,1.5fr) auto; gap: 10px; align-items: center; text-align: left; background: #fff; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 11px 20px; font-weight: 400; }
@@ -777,4 +790,11 @@ button.small {
   .group-create { grid-template-columns: 1fr; }
   .mail-row { grid-template-columns: 1fr; gap: 3px; }
   .inbox-list { margin-left: -16px; margin-right: -16px; }
+}
+
+@media (max-width: 1100px) {
+  .mail-workspace { grid-template-columns: 1fr; }
+  .mail-sidebar { position: static; max-height: none; }
+  .mail-sidebar .inbox-card, .mail-sidebar .inbox-list { max-height: none; }
+  .composer-controls { grid-template-columns: 1fr; }
 }

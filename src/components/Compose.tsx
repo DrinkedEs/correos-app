@@ -11,9 +11,10 @@ type Composed = {
 type Props = {
   value: Composed;
   onChange: (next: Composed) => void;
+  htmlLabel?: string;
 };
 
-export default function Compose({ value, onChange }: Props) {
+export default function Compose({ value, onChange, htmlLabel = "HTML" }: Props) {
   function set<K extends keyof Composed>(k: K, v: Composed[K]) {
     onChange({ ...value, [k]: v });
   }
@@ -59,7 +60,7 @@ export default function Compose({ value, onChange }: Props) {
 
       <div className="row">
         <label>
-          HTML
+          {htmlLabel}
           <textarea
             rows={18}
             value={value.html}
