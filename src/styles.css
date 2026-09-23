@@ -53,7 +53,7 @@ body {
 }
 
 .app {
-  max-width: 1440px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
 }
@@ -122,13 +122,30 @@ body {
 
 @media (min-width: 1024px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.35fr) minmax(460px, 0.65fr);
   }
   .col-right {
     position: sticky;
     top: 16px;
   }
 }
+
+/* INBOX AND GROUPS */
+.group-create { display: grid; grid-template-columns: 0.8fr 1.6fr auto; gap: 8px; margin-top: 12px; }
+.group-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.group-item { display: flex; border: 1px solid var(--brand-100); border-radius: var(--radius-sm); overflow: hidden; }
+.group-pick { border: 0; background: var(--brand-50); color: var(--brand-dark); padding: 7px 10px; text-align: left; }
+.group-pick small { display: block; color: var(--text-soft); font-weight: 400; }
+.inbox-card { overflow: hidden; }
+.inbox-status { color: var(--text-soft); font-size: 13px; }
+.inbox-list { max-height: 420px; overflow: auto; margin: 12px -20px 0; border-top: 1px solid var(--border); }
+.mail-row { width: 100%; display: grid; grid-template-columns: minmax(120px,.8fr) minmax(160px,1.5fr) auto; gap: 10px; align-items: center; text-align: left; background: #fff; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 11px 20px; font-weight: 400; }
+.mail-row:hover { background: var(--brand-50); }
+.mail-row.unread { background: #f8fbfd; font-weight: 700; }
+.mail-row small { color: var(--muted); white-space: nowrap; font-weight: 400; }
+.mail-detail { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 14px; }
+.mail-detail iframe { display: block; width: 100%; height: 520px; margin-top: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; }
+.signature-actions { justify-content: flex-start; margin: -4px 0; }
 
 /* CARD */
 .card {
@@ -753,4 +770,7 @@ button.small {
   .preview-frame {
     height: 460px;
   }
+  .group-create { grid-template-columns: 1fr; }
+  .mail-row { grid-template-columns: 1fr; gap: 3px; }
+  .inbox-list { margin-left: -16px; margin-right: -16px; }
 }

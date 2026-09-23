@@ -1,5 +1,7 @@
-const KEY = "correos.contacts.v1";
-const MAX = 200;
+const KEY = "correos.contacts.v2";
+const LEGACY_KEY = "correos.contacts.v1";
+const GROUPS_KEY = "correos.groups.v1";
+const MAX = 300;
 
 function normalize(email: string): string {
   return email.trim().toLowerCase();
@@ -9,38 +11,40 @@ function isEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-export function loadContacts(): string[] {
+export type Contact = { email: string; uses: number; lastUsed: number };
+export type ContactGroup = { id: string; name: string; emails: string[] };
+
+export function loadContacts(): Contact[] {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? (arr as string[]) : [];
+    if (raw) return JSON.parse(raw) as Contact[];
+    const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) ?? "[]") as string[];
+    return legacy.map((email) => ({ email: normalize(email), uses: 0, lastUsed: 0 }));
   } catch {
     return [];
   }
 }
 
-export function saveContacts(list: string[]): void {
-  const dedup = Array.from(new Set(list.map(normalize)));
-  localStorage.setItem(KEY, JSON.stringify(dedup.slice(0, MAX)));
-}
+function saveContacts(list: Contact[]): void { localStorage.setItem(KEY, JSON.stringify(list.slice(0, MAX))); }
 
 export function addContactsFromCsv(...csvLists: Array<string | undefined>): void {
-  const current = loadContacts();
-  const incoming: string[] = [];
+  const now = Date.now();
+  const map = new Map(loadContacts().map((c) => [c.email, c]));
   for (const csv of csvLists) {
     if (!csv) continue;
     for (const part of csv.split(/[,;\s]+/)) {
       const v = normalize(part);
-      if (v && isEmail(v)) incoming.push(v);
+      if (v && isEmail(v)) {
+        const old = map.get(v);
+        map.set(v, { email: v, uses: (old?.uses ?? 0) + 1, lastUsed: now });
+      }
     }
   }
-  if (incoming.length === 0) return;
-  saveContacts([...incoming, ...current]);
+  saveContacts([...map.values()].sort((a, b) => b.uses - a.uses || b.lastUsed - a.lastUsed));
 }
 
-export function removeContact(email: string): string[] {
-  const next = loadContacts().filter((e) => e !== normalize(email));
+export function removeContact(email: string): Contact[] {
+  const next = loadContacts().filter((e) => e.email !== normalize(email));
   saveContacts(next);
   return next;
 }
@@ -56,15 +60,23 @@ export function suggestContacts(
 ): string[] {
   const q = normalize(query);
   const excludeSet = new Set(exclude.map(normalize));
-  const all = loadContacts();
+  const all = loadContacts().sort((a, b) => b.uses - a.uses || b.lastUsed - a.lastUsed);
   const out: string[] = [];
   for (const c of all) {
-    if (excludeSet.has(c)) continue;
-    if (!q || c.includes(q)) out.push(c);
+    if (excludeSet.has(c.email)) continue;
+    if (!q || c.email.includes(q)) out.push(c.email);
     if (out.length >= limit) break;
   }
   return out;
 }
+
+export function loadGroups(): ContactGroup[] { try { return JSON.parse(localStorage.getItem(GROUPS_KEY) ?? "[]"); } catch { return []; } }
+export function saveGroup(name: string, emails: string[], id?: string): ContactGroup {
+  const group = { id: id ?? crypto.randomUUID(), name: name.trim(), emails: [...new Set(emails.map(normalize).filter(isEmail))] };
+  const next = [...loadGroups().filter((g) => g.id !== group.id), group].filter((g) => g.name && g.emails.length);
+  localStorage.setItem(GROUPS_KEY, JSON.stringify(next)); return group;
+}
+export function deleteGroup(id: string): void { localStorage.setItem(GROUPS_KEY, JSON.stringify(loadGroups().filter((g) => g.id !== id))); }
 
 export function parseCsv(csv: string): string[] {
   return csv

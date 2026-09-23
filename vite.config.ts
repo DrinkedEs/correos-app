@@ -10,7 +10,7 @@ export default defineConfig(({ command }) => ({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg"],
+      includeAssets: ["favicon.svg", "email-assets/*"],
       manifest: {
         name: "Correos SMTP",
         short_name: "Correos",

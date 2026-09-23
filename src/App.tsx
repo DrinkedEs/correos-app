@@ -20,9 +20,12 @@ import {
   savePass
 } from "./state/session";
 import { addContactsFromCsv } from "./state/contacts";
+import GroupsCard from "./components/GroupsCard";
+import Inbox, { type MailCredentials } from "./components/Inbox";
+import { builtInImages, signatureHtml } from "./state/builtInAssets";
 
 const EMPTY_CREDS: SmtpCreds = {
-  smtpHost: "",
+  smtpHost: "smtp.exmail.qq.com",
   smtpPort: 465,
   smtpUser: "",
   smtpPass: "",
@@ -50,6 +53,7 @@ export default function App() {
   const [inlineImages, setInlineImages] = useState<InlineImage[]>([]);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
+  const [reply, setReply] = useState<{ inReplyTo: string; references: string } | null>(null);
 
   useEffect(() => {
     const profile = loadProfile();
@@ -116,7 +120,9 @@ export default function App() {
         subject: msg.subject,
         html: msg.html,
         inlineImages,
-        attachments
+        attachments,
+        inReplyTo: reply?.inReplyTo,
+        references: reply?.references
       });
       addContactsFromCsv(msg.to, msg.cc, msg.bcc);
       setStatus({ kind: "ok", result });
@@ -124,6 +130,21 @@ export default function App() {
       setStatus({ kind: "err", message: e?.message ?? "Error desconocido" });
     }
   }
+
+  async function insertSignature() {
+    try {
+      const images = await builtInImages();
+      setInlineImages((old) => [...old.filter((x) => !images.some((i) => i.cid === x.cid)), ...images]);
+      setMsg((m) => ({ ...m, html: m.html.includes("cid:firma@correos.local") ? m.html : `${m.html}${signatureHtml}` }));
+    } catch { setStatus({ kind: "err", message: "No se pudieron cargar los recursos de firma." }); }
+  }
+
+  function replyTo(mail: { from: { address: string }; subject: string; html: string; messageId: string }) {
+    setMsg({ to: mail.from.address, cc: "", bcc: "", subject: /^re:/i.test(mail.subject) ? mail.subject : `Re: ${mail.subject}`, html: `<p><br></p><hr><blockquote>${mail.html}</blockquote>` });
+    setReply({ inReplyTo: mail.messageId, references: mail.messageId });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  const mailboxCreds: MailCredentials = { imapUser: creds.smtpUser, imapPass: creds.smtpPass, imapHost: "imap.exmail.qq.com", imapPort: 993 };
 
   return (
     <div className="app">
@@ -147,6 +168,12 @@ export default function App() {
           />
 
           <Compose value={msg} onChange={setMsg} />
+
+          <div className="actions signature-actions"><button type="button" className="ghost" onClick={insertSignature}>Insertar firma y logos</button>{reply ? <button type="button" className="ghost small" onClick={() => setReply(null)}>Quitar respuesta</button> : null}</div>
+
+          <GroupsCard onPick={(emails) => setMsg((m) => ({ ...m, to: Array.from(new Set([...m.to.split(/[,;]+/).map(x => x.trim()).filter(Boolean), ...emails])).join(", ") }))} />
+
+          <Inbox creds={mailboxCreds} onReply={replyTo} />
 
           <InlineImagesCard
             images={inlineImages}

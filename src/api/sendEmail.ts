@@ -21,6 +21,8 @@ export type EmailPayload = {
   html: string;
   inlineImages?: InlineImage[];
   attachments?: File[];
+  inReplyTo?: string;
+  references?: string;
 };
 
 export type SendResult = {
@@ -46,6 +48,8 @@ export async function sendEmail(
   if (payload.bcc) fd.append("bcc", payload.bcc);
   fd.append("subject", payload.subject);
   fd.append("html", payload.html);
+  if (payload.inReplyTo) fd.append("inReplyTo", payload.inReplyTo);
+  if (payload.references) fd.append("references", payload.references);
 
   const cidMap: Record<string, string> = {};
   (payload.inlineImages ?? []).forEach((img) => {
