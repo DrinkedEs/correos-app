@@ -54,6 +54,7 @@ export default function App() {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [reply, setReply] = useState<{ inReplyTo: string; references: string; originalHtml: string; originalSubject: string } | null>(null);
+  const [reading, setReading] = useState<OpenMessage | null>(null);
 
   useEffect(() => {
     const profile = loadProfile();
@@ -149,6 +150,7 @@ export default function App() {
     const cc = all ? unique(mail.cc).filter((address) => !to.includes(address)) : [];
     setMsg({ to: to.join(", "), cc: cc.join(", "), bcc: "", subject: /^re:/i.test(mail.subject) ? mail.subject : `Re: ${mail.subject}`, html: "<p><br></p>" });
     setReply({ inReplyTo: mail.messageId, references: mail.messageId, originalHtml: mail.html, originalSubject: mail.subject });
+    setReading(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   const mailboxCreds: MailCredentials = { imapUser: creds.smtpUser, imapPass: creds.smtpPass, imapHost: "imap.exmail.qq.com", imapPort: 993 };
@@ -162,9 +164,10 @@ export default function App() {
 
       <div className="mail-workspace">
         <aside className="mail-sidebar">
-          <Inbox creds={mailboxCreds} onReply={replyTo} onReplyAll={(mail) => replyTo(mail, true)} />
+          <Inbox creds={mailboxCreds} onOpenMessage={setReading} />
         </aside>
         <main className="mail-main">
+          {reading ? <section className="card reader-card"><div className="card-head"><div><h2>{reading.subject}</h2><p className="hint">{reading.from.name || reading.from.address} · {reading.date && new Date(reading.date).toLocaleString()}</p></div><div className="reply-actions"><button type="button" className="ghost small" onClick={() => replyTo(reading)}>Responder</button><button type="button" className="primary small" onClick={() => replyTo(reading, true)}>Responder a todos</button><button type="button" className="ghost small" onClick={() => setReading(null)}>Cerrar</button></div></div><iframe title="Correo recibido" sandbox="allow-popups" srcDoc={reading.html} /></section> : null}
           <div className="composer-controls">
             <div className="composer-settings">
           <SmtpConfig

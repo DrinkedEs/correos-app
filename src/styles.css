@@ -138,6 +138,7 @@ body {
 .composer-settings, .composer-message { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .mail-main > .preview-card { width: 100%; }
 .mail-main .preview-frame { height: min(76vh, 980px); min-height: 650px; }
+.reader-card iframe { display: block; width: 100%; height: min(78vh, 1100px); min-height: 620px; margin-top: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; }
 .reply-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 11px 13px; background: var(--brand-50); border: 1px solid var(--brand-100); border-radius: var(--radius-sm); color: var(--brand-dark); }
 .reply-banner span { flex: 1; font-size: 13px; color: var(--text-soft); }
 
