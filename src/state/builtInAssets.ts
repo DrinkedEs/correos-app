@@ -13,4 +13,4 @@ export async function builtInImages(): Promise<InlineImage[]> {
     return { file: new File([blob], name, { type: blob.type || "application/octet-stream" }), cid };
   }));
 }
-export const signatureHtml = `<br><br><img src="cid:firma_id" alt="Firma"><br><img src="cid:logo_id" alt="Logo">`;
+export const signatureHtml = `<br><br><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center"><img src="cid:firma_id" alt="Firma" width="220" style="display:block;border:0;width:220px;height:auto;"></td></tr></table>`;
