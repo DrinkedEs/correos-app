@@ -2,7 +2,7 @@ import type { InlineImage } from "../api/sendEmail";
 const ASSETS = [
   ["firma.jpg", "firma_id"],
   ["logo.png", "logo_id"],
-  ["logoForesight_chico.ico", "logoForesight_chico_id"]
+  ["logoForesight_chico.png", "logoForesight_chico_id"]
 ] as const;
 export const builtInCidUrls: Record<string, string> = Object.fromEntries(
   ASSETS.map(([name, cid]) => [cid.toLowerCase(), `${import.meta.env.BASE_URL}email-assets/${name}`])
