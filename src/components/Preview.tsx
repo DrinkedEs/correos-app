@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { InlineImage } from "../api/sendEmail";
+import { builtInCidUrls } from "../state/builtInAssets";
 
 type Props = {
   html: string;
@@ -37,7 +38,7 @@ function replaceCidsInHtml(
     const m = src.match(/^\s*cid:(.+?)\s*$/i);
     if (!m) return;
     const cid = m[1].trim().toLowerCase();
-    const url = cidToUrl.get(cid);
+    const url = cidToUrl.get(cid) ?? builtInCidUrls[cid];
     if (url) {
       img.setAttribute("src", url);
       touched = true;

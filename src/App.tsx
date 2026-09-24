@@ -129,13 +129,16 @@ export default function App() {
     setStatus({ kind: "sending" });
     try {
       const finalHtml = reply ? composeReplyHtml(msg.html, reply.originalHtml) : msg.html;
+      const needsBuiltIns = /cid:(logo_id|firma_id|logoForesight_chico_id)/i.test(finalHtml);
+      const builtIns = needsBuiltIns ? await builtInImages() : [];
+      const sendInlineImages = [...inlineImages.filter((image) => !builtIns.some((builtIn) => builtIn.cid === image.cid)), ...builtIns];
       const result = await sendEmail(creds, {
         to: msg.to,
         cc: msg.cc || undefined,
         bcc: msg.bcc || undefined,
         subject: msg.subject,
         html: finalHtml,
-        inlineImages,
+        inlineImages: sendInlineImages,
         attachments,
         inReplyTo: reply?.inReplyTo,
         references: reply?.references

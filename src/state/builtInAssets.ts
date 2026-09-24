@@ -4,6 +4,9 @@ const ASSETS = [
   ["logo.png", "logo_id"],
   ["logoForesight_chico.ico", "logoForesight_chico_id"]
 ] as const;
+export const builtInCidUrls: Record<string, string> = Object.fromEntries(
+  ASSETS.map(([name, cid]) => [cid.toLowerCase(), `${import.meta.env.BASE_URL}email-assets/${name}`])
+);
 export async function builtInImages(): Promise<InlineImage[]> {
   return Promise.all(ASSETS.map(async ([name, cid]) => {
     const blob = await fetch(`${import.meta.env.BASE_URL}email-assets/${name}`).then(r => r.blob());
