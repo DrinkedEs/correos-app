@@ -56,7 +56,13 @@ export default function Preview({ html, inlineImages, onEditHtml }: Props) {
   const [editing, setEditing] = useState(false);
 
   function editableRoot(doc: Document): HTMLElement { return doc.getElementById("correo-respuesta") ?? doc.body; }
-  function syncFromPreview() { const doc = frameRef.current?.contentDocument; if (doc && onEditHtml) onEditHtml(editableRoot(doc).innerHTML); }
+  function syncFromPreview() {
+    const doc = frameRef.current?.contentDocument;
+    if (!doc || !onEditHtml) return;
+    let html = editableRoot(doc).innerHTML;
+    byCid.forEach((dataUrl, cid) => { html = html.split(dataUrl).join(`cid:${cid}`); });
+    onEditHtml(html);
+  }
   function insertSnippet(snippet: string) {
     const doc = frameRef.current?.contentDocument;
     if (!doc || !editing) return;
