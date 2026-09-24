@@ -184,7 +184,7 @@ export default function App() {
           <Inbox creds={mailboxCreds} onOpenMessage={setReading} />
         </aside>
         <main className="mail-main">
-          {reading ? <section className="card reader-card"><div className="card-head"><div><h2>{reading.subject}</h2><p className="hint">{reading.from.name || reading.from.address} · {reading.date && new Date(reading.date).toLocaleString()}</p></div><div className="reply-actions"><button type="button" className="ghost small" onClick={() => replyTo(reading)}>Responder</button><button type="button" className="primary small" onClick={() => replyTo(reading, true)}>Responder a todos</button><button type="button" className="ghost small" onClick={() => setReading(null)}>Cerrar</button></div></div><iframe title="Correo recibido" sandbox="allow-popups" srcDoc={reading.html} /></section> : null}
+          {reading ? <section className="card reader-card"><div className="card-head"><div><h2>{reading.subject}</h2><p className="hint">{reading.from.name || reading.from.address} · {reading.date && new Date(reading.date).toLocaleString()}</p></div><div className="reply-actions"><button type="button" className="ghost small" onClick={() => replyTo(reading)}>Responder</button><button type="button" className="primary small" onClick={() => replyTo(reading, true)}>Responder a todos</button><button type="button" className="ghost small" onClick={() => setReading(null)}>Cerrar</button></div></div><Preview html={reading.html} inlineImages={[]} /></section> : null}
           <div className="composer-controls">
             <div className="composer-settings">
           <SmtpConfig
