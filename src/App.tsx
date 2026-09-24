@@ -83,6 +83,20 @@ export default function App() {
     }
   }, [rememberPass, creds.smtpPass]);
 
+  // Los recursos Foresight se adjuntan solos cuando el HTML los referencia.
+  useEffect(() => {
+    if (!/cid:(logo_id|firma_id|logoForesight_chico_id)/i.test(msg.html)) return;
+    let cancelled = false;
+    void builtInImages().then((images) => {
+      if (cancelled) return;
+      setInlineImages((current) => {
+        const builtInCids = new Set(images.map((image) => image.cid));
+        return [...current.filter((image) => !builtInCids.has(image.cid)), ...images];
+      });
+    }).catch(() => setStatus({ kind: "err", message: "No se pudieron cargar los recursos de firma." }));
+    return () => { cancelled = true; };
+  }, [msg.html]);
+
   function handleRememberPass(v: boolean) {
     setRememberPass(v);
     if (!v) clearPass();

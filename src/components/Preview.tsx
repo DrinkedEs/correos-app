@@ -21,7 +21,6 @@ function replaceCidsInHtml(
   cidToUrl: Map<string, string>
 ): string {
   if (!html) return html;
-  if (cidToUrl.size === 0) return html;
 
   let doc: Document;
   try {
@@ -30,8 +29,9 @@ function replaceCidsInHtml(
     return html;
   }
 
+  doc.querySelectorAll("script,iframe,object,embed").forEach((node) => node.remove());
   const imgs = doc.querySelectorAll("img");
-  let touched = false;
+  let touched = true;
   imgs.forEach((img) => {
     const src = img.getAttribute("src") ?? "";
     const m = src.match(/^\s*cid:(.+?)\s*$/i);
