@@ -53,15 +53,25 @@ export default function Preview({ html, inlineImages, onEditHtml }: Props) {
   const [byCid, setByCid] = useState<Map<string, string>>(new Map());
   const cardRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const changedInPreview = useRef(false);
   const [full, setFull] = useState(false);
   const [editing, setEditing] = useState(false);
 
   function editableRoot(doc: Document): HTMLElement { return doc.getElementById("correo-respuesta") ?? doc.body; }
   function syncFromPreview() {
     const doc = frameRef.current?.contentDocument;
-    if (!doc || !onEditHtml) return;
-    let html = editableRoot(doc).innerHTML;
+    if (!doc || !onEditHtml || !changedInPreview.current) return;
+    const copy = editableRoot(doc).cloneNode(true) as HTMLElement;
+    copy.removeAttribute("contenteditable");
+    copy.classList.remove("preview-editing");
+    copy.querySelectorAll("img").forEach((img) => {
+      const src = img.getAttribute("src") ?? "";
+      const builtIn = Object.entries(builtInCidUrls).find(([, url]) => src === url || src.endsWith(url) || src.includes(`/email-assets/${url.split("/").pop()}`));
+      if (builtIn) img.setAttribute("src", `cid:${builtIn[0]}`);
+    });
+    let html = copy.innerHTML;
     byCid.forEach((dataUrl, cid) => { html = html.split(dataUrl).join(`cid:${cid}`); });
+    changedInPreview.current = false;
     onEditHtml(html);
   }
   function insertSnippet(snippet: string) {
@@ -77,10 +87,14 @@ export default function Preview({ html, inlineImages, onEditHtml }: Props) {
     const root = editableRoot(doc);
     root.contentEditable = editing ? "true" : "false";
     root.classList.toggle("preview-editing", editing);
+    root.oninput = editing ? () => { changedInPreview.current = true; } : null;
     root.onblur = editing ? syncFromPreview : null;
   }
 
-  useEffect(() => { configureEditable(); }, [editing]);
+  useEffect(() => {
+    changedInPreview.current = false;
+    configureEditable();
+  }, [editing]);
 
   async function toggleFull() {
     if (!document.fullscreenElement) await cardRef.current?.requestFullscreen();
@@ -129,7 +143,7 @@ export default function Preview({ html, inlineImages, onEditHtml }: Props) {
           sandbox="allow-same-origin"
           srcDoc={rendered}
           className="preview-frame"
-          onLoad={configureEditable}
+          onLoad={() => { changedInPreview.current = false; configureEditable(); }}
         />
       ) : (
         <div className="preview-empty">
